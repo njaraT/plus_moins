@@ -1,72 +1,96 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
-void plus_moins() {
-    int nombreMystere, nombreUtilisateur;
-    int essais = 0;
-    int maxEssais = -1;
-    int niveau;
+#define MIN_ESSAIS 10
 
-    // Choix du niveau de difficulté
-    printf("=== Jeu du Plus ou Moins ===\n");
-    printf("Choisissez un niveau de difficulté :\n");
-    printf("1 - Facile (illimité)\n");
-    printf("2 - Moyen (25 essais)\n");
-    printf("3 - Difficile (10 essais)\n");
-    printf("Votre choix : ");
-    scanf("%d", &niveau);
-
-    switch (niveau) {
-        case 1:
-            maxEssais = -1; // illimité
-            break;
-        case 2:
-            maxEssais = 25;
-            break;
-        case 3:
-            maxEssais = 10;
-            break;
-        default:
-            printf("Niveau invalide. Le niveau facile sera utilisé par défaut.\n");
-            maxEssais = -1;
-            break;
+int demander_nombre_secret(int joueur) {
+    int nombre;
+    printf("\nJoueur %d, entrez un nombre mystère (1 à 100) pour votre adversaire : ", joueur);
+    scanf("%d", &nombre);
+    while (nombre < 1 || nombre > 100) {
+        printf("Nombre invalide. Choisissez un nombre entre 1 et 100 : ");
+        scanf("%d", &nombre);
     }
+    return nombre;
+}
 
-    // Initialisation du nombre aléatoire
-    srand(time(NULL));
-    nombreMystere = rand() % 100 + 1;
+int demander_nombre_essais() {
+    int essais;
+    printf("Définissez le nombre d'essais (minimum %d) : ", MIN_ESSAIS);
+    scanf("%d", &essais);
+    while (essais < MIN_ESSAIS) {
+        printf("Minimum %d essais. Essayez encore : ", MIN_ESSAIS);
+        scanf("%d", &essais);
+    }
+    return essais;
+}
 
-    printf("J'ai choisi un nombre entre 1 et 100. Essayez de le deviner !\n");
+int phase_devineur(int devineur, int nombreMystere, int maxEssais) {
+    int proposition;
+    int essais = 0;
+
+    printf("\n>>> Joueur %d doit deviner le nombre ! <<<\n", devineur);
 
     do {
-        printf("Essai %d", essais + 1);
-        if (maxEssais > 0) {
-            printf(" / %d", maxEssais);
-        }
-        printf(" - Votre proposition : ");
-        scanf("%d", &nombreUtilisateur);
         essais++;
+        printf("Essai %d / %d - Entrez votre proposition : ", essais, maxEssais);
+        scanf("%d", &proposition);
 
-        if (nombreUtilisateur < nombreMystere) {
+        if (proposition < nombreMystere) {
             printf("C'est plus !\n");
-        } else if (nombreUtilisateur > nombreMystere) {
+        } else if (proposition > nombreMystere) {
             printf("C'est moins !\n");
         } else {
-            printf("Bravo ! Vous avez trouvé le nombre mystère en %d essai(s) !\n", essais);
-            return;
+            printf("Bravo Joueur %d ! Vous avez trouvé en %d essai(s) !\n", devineur, essais);
+            return essais;
         }
 
-        if (maxEssais > 0 && essais >= maxEssais) {
-            printf("Dommage ! Vous avez atteint la limite d'essais. Le nombre mystère était : %d\n", nombreMystere);
-            return;
-        }
+    } while (essais < maxEssais);
 
-    } while (1);
+    printf("Dommage ! Joueur %d n'a pas trouvé. Le nombre était : %d\n", devineur, nombreMystere);
+    return 0; // 0 point si pas trouvé
+}
+
+void plus_moins_2_joueurs() {
+    int scoreJ1 = 0, scoreJ2 = 0;
+    int nombre, essaisMax, essaisUtilises;
+
+    printf("=== Mode 2 Joueurs ===\n");
+
+    // Tour du joueur 1
+    printf("\n--- Tour 1 ---\n");
+    nombre = demander_nombre_secret(1);
+    essaisMax = demander_nombre_essais();
+    essaisUtilises = phase_devineur(2, nombre, essaisMax);
+    if (essaisUtilises > 0) {
+        scoreJ2 = essaisMax - essaisUtilises + 1; // Plus il trouve tôt, plus il marque
+    }
+
+    // Tour du joueur 2
+    printf("\n--- Tour 2 ---\n");
+    nombre = demander_nombre_secret(2);
+    essaisMax = demander_nombre_essais();
+    essaisUtilises = phase_devineur(1, nombre, essaisMax);
+    if (essaisUtilises > 0) {
+        scoreJ1 = essaisMax - essaisUtilises + 1;
+    }
+
+    // Affichage des scores
+    printf("\n=== Résultats ===\n");
+    printf("Score Joueur 1 : %d\n", scoreJ1);
+    printf("Score Joueur 2 : %d\n", scoreJ2);
+
+    if (scoreJ1 > scoreJ2) {
+        printf("🏆 Joueur 1 gagne !\n");
+    } else if (scoreJ2 > scoreJ1) {
+        printf("🏆 Joueur 2 gagne !\n");
+    } else {
+        printf("🤝 Égalité !\n");
+    }
 }
 
 int main() {
-    plus_moins();
+    plus_moins_2_joueurs();
     return 0;
 }
 
