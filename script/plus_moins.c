@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#modifier
 #define MIN_ESSAIS 10
 
 int demander_nombre_secret(int joueur) {
